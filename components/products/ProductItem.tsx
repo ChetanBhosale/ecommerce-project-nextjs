@@ -1,3 +1,6 @@
+import fs from 'fs';
+import path from 'path';
+
 import Image from 'next/image';
 import Link from 'next/link';
 import { getPlaiceholder } from 'plaiceholder';
@@ -7,31 +10,24 @@ import { Product } from '@/lib/models/ProductModel';
 import { Rating } from './Rating';
 
 const ProductItem = async ({ product }: { product: Product }) => {
-  // Convert relative image paths to absolute URLs
-  const getImageUrl = (imagePath: string) => {
-    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
-      return imagePath;
-    }
-    // For local images, use the base URL
-    const baseUrl =
-      process.env.NEXTAUTH_URL ||
-      (process.env.VERCEL_URL
-        ? `https://${process.env.VERCEL_URL}`
-        : 'http://localhost:3000');
-    return `${baseUrl}${imagePath}`;
-  };
-
   let base64 = '';
   try {
-    const imageUrl = getImageUrl(product.image);
-    const buffer = await fetch(imageUrl).then(async (res) =>
-      Buffer.from(await res.arrayBuffer()),
-    );
-    const plaiceholder = await getPlaiceholder(buffer);
-    base64 = plaiceholder.base64;
+    // For local images, read from file system during build
+    if (product.image.startsWith('/images/')) {
+      const imagePath = path.join(process.cwd(), 'public', product.image);
+      const buffer = fs.readFileSync(imagePath);
+      const plaiceholder = await getPlaiceholder(buffer);
+      base64 = plaiceholder.base64;
+    } else if (product.image.startsWith('http://') || product.image.startsWith('https://')) {
+      // For remote images, fetch them
+      const buffer = await fetch(product.image).then(async (res) =>
+        Buffer.from(await res.arrayBuffer()),
+      );
+      const plaiceholder = await getPlaiceholder(buffer);
+      base64 = plaiceholder.base64;
+    }
   } catch (error) {
-    console.error(`Error generating placeholder for ${product.image}:`, error);
-    // Continue without blur placeholder if image fails to load
+    // Silently fail and continue without blur placeholder
   }
 
   return (
