@@ -5,6 +5,8 @@ import dbConnect from '@/lib/dbConnect';
 import ProductModel from '@/lib/models/ProductModel';
 import UserModel from '@/lib/models/UserModel';
 
+export const dynamic = 'force-dynamic';
+
 export const GET = async (request: NextRequest) => {
   try {
     const { users, products } = data;

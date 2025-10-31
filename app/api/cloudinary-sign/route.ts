@@ -2,6 +2,8 @@ import cloudinary from 'cloudinary';
 
 import { auth } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 export const POST = auth(async (req: any) => {
   if (!req.auth || !req.auth.user?.isAdmin) {
     return Response.json(
