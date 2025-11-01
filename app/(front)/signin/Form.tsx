@@ -15,8 +15,18 @@ const Form = () => {
   const params = useSearchParams();
   const { data: session } = useSession();
 
-  let callbackUrl = params.get('callbackUrl') || '/';
   const router = useRouter();
+  
+  // Ensure callbackUrl is always relative (no localhost)
+  let callbackUrl = params.get('callbackUrl') || '/';
+  // Remove any absolute URLs and ensure it's relative
+  if (callbackUrl.includes('localhost') || callbackUrl.startsWith('http')) {
+    callbackUrl = '/';
+  }
+  // Ensure it starts with /
+  if (!callbackUrl.startsWith('/')) {
+    callbackUrl = '/' + callbackUrl;
+  }
 
   const {
     register,
@@ -37,10 +47,19 @@ const Form = () => {
 
   const formSubmit: SubmitHandler<Inputs> = async (form) => {
     const { email, password } = form;
-    signIn('credentials', {
+    const result = await signIn('credentials', {
       email,
       password,
+      callbackUrl: callbackUrl,
+      redirect: false,
     });
+    
+    if (result?.ok) {
+      router.push(callbackUrl);
+      router.refresh();
+    } else if (result?.error) {
+      router.push(`/signin?error=${result.error}`);
+    }
   };
 
   return (

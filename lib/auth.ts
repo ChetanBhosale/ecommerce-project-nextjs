@@ -66,6 +66,13 @@ export const config = {
       }
       return session;
     },
+    async redirect({ url, baseUrl }) {
+      // Ensure we only redirect to relative paths or same origin
+      if (url.startsWith('/')) return url;
+      if (url.startsWith(baseUrl)) return url;
+      // Default to home page
+      return baseUrl;
+    },
   },
 };
 

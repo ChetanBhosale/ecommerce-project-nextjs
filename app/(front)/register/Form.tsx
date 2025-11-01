@@ -19,7 +19,17 @@ const Form = () => {
 
   const params = useSearchParams();
   const router = useRouter();
+  
+  // Ensure callbackUrl is always relative (no localhost)
   let callbackUrl = params.get('callbackUrl') || '/';
+  // Remove any absolute URLs and ensure it's relative
+  if (callbackUrl.includes('localhost') || callbackUrl.startsWith('http')) {
+    callbackUrl = '/';
+  }
+  // Ensure it starts with /
+  if (!callbackUrl.startsWith('/')) {
+    callbackUrl = '/' + callbackUrl;
+  }
 
   const {
     register,
